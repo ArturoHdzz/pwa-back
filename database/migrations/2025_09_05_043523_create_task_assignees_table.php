@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('task_assignees', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->foreignUuid('task_id')->constrained('tasks')->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained('profiles')->cascadeOnDelete();
+            $table->primary(['task_id', 'user_id']);
         });
     }
 

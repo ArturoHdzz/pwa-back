@@ -12,8 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('chat_messages', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('conversation_id')->constrained('chat_conversations')->cascadeOnDelete();
+            $table->foreignUuid('organization_id')->constrained('organizations');
+            $table->foreignUuid('sender_id')->constrained('profiles');
+            $table->text('body');
             $table->timestamps();
+
+            $table->index(['conversation_id', 'created_at']);
         });
     }
 

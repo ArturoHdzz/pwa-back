@@ -12,8 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tasks', function (Blueprint $table) {
-            $table->id();
+            $table->uuid('id')->primary();
+            $table->foreignUuid('organization_id')->constrained('organizations');
+            $table->foreignUuid('group_id')->nullable()->constrained('groups')->nullOnDelete();
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->string('status')->default('todo');
+            $table->timestamp('due_at')->nullable();
+            $table->foreignUuid('created_by')->constrained('profiles');
             $table->timestamps();
+            
+            $table->index(['organization_id', 'status', 'due_at']);
         });
     }
 
