@@ -11,9 +11,6 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasApiTokens;
 
-    public $incrementing = false;
-    protected $keyType = 'string';
-
     protected $fillable = [
         'name',
         'email',
@@ -23,28 +20,26 @@ class User extends Authenticatable
         'telefono',
         'activo',
     ];
+
     public function profile()
     {
         return $this->hasOne(Profile::class);
     }
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
+
     protected $hidden = [
         'password',
         'remember_token',
     ];
+
     public function organization()
     {
         return $this->hasOneThrough(
             Organization::class,
             Profile::class,
-            'user_id',        // Foreign key on profiles...
-            'id',             // Local key on organizations...
-            'id',             // Local key on users...
-            'organization_id' // Foreign key on profiles...
+            'user_id',
+            'id',
+            'id',
+            'organization_id'
         );
     }
 
@@ -71,11 +66,6 @@ class User extends Authenticatable
         return $this->hasMany(ChatMessage::class, 'sender_id');
     }
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
