@@ -13,11 +13,15 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Crear un usuario específico para pruebas
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Admin',
+            'apellido_paterno' => 'Sistema',
+            'apellido_materno' => 'PWA',
+            'email' => 'admin@test.com',
+            'telefono' => '1234567890',
+            'password' => 'password', // La contraseña será 'password'
+            'activo' => true,
         ]);
     }
 }
