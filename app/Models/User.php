@@ -88,7 +88,4 @@ class User extends Authenticatable
             'ultimo_login' => 'datetime',
         ];
     }
-
-
-
 }
