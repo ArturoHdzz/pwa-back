@@ -14,7 +14,6 @@ class ChatController extends Controller
         $user = $request->user();
         $profile = $user->profile;
 
-        // Conversaciones donde el usuario es miembro
         $convs = ChatConversation::query()
             ->where('organization_id', $profile->organization_id)
             ->whereHas('members', function ($q) use ($profile) {
