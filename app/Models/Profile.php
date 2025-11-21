@@ -15,6 +15,7 @@ class Profile extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id',
         'user_id',
         'organization_id',
         'display_name',

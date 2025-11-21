@@ -21,10 +21,10 @@ class User extends Authenticatable
         'activo',
     ];
 
-    public function profile()
-    {
-        return $this->hasOne(Profile::class);
-    }
+   public function profile()
+{
+    return $this->hasOne(Profile::class, 'id', 'id'); 
+}
 
     protected $hidden = [
         'password',
@@ -75,4 +75,7 @@ class User extends Authenticatable
             'ultimo_login' => 'datetime',
         ];
     }
+
+
+
 }

@@ -16,6 +16,7 @@ class ChatMessage extends Model
     public $timestamps = false;
 
     protected $fillable = [
+            'id',
         'conversation_id',
         'organization_id',
         'sender_id',

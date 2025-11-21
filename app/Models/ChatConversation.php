@@ -17,6 +17,7 @@ class ChatConversation extends Model
     public $timestamps = false;
 
     protected $fillable = [
+         'id',
         'organization_id',
         'type',
         'group_id',

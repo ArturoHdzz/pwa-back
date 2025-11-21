@@ -18,6 +18,7 @@ class Task extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id',
         'organization_id',
         'group_id',
         'title',
