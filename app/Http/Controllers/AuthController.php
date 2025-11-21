@@ -54,16 +54,18 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'organization_id' => $organization->id,
                 'display_name' => $user->name . ' ' . $user->apellido_paterno,
-                'role' => $request->role, 
+                'role' => $request->role,
             ]);
 
             DB::commit();
 
             $token = $user->createToken('auth_token')->plainTextToken;
 
+            $user->load('profile.organization');
+
             return response()->json([
                 'message' => 'Usuario registrado exitosamente',
-                'user' => $user->load('profile.organization'),
+                'user' => $user,
                 'token' => $token
             ], 201);
 
@@ -105,9 +107,11 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $user->load('profile.organization');
+
         return response()->json([
             'message' => 'Login exitoso',
-            'user' => $user->load('profile.organization'),
+            'user' => $user,
             'token' => $token
         ]);
     }
