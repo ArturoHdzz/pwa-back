@@ -21,10 +21,11 @@ class User extends Authenticatable
         'activo',
     ];
 
-   public function profile()
+  public function profile()
 {
-    return $this->hasOne(Profile::class, 'id', 'id'); 
+    return $this->hasOne(Profile::class, 'user_id', 'id');
 }
+
 
     protected $hidden = [
         'password',
@@ -42,6 +43,18 @@ class User extends Authenticatable
             'organization_id'
         );
     }
+
+    public function organizations()
+    {
+    return $this->hasManyThrough(
+        Organization::class,
+        Profile::class,
+        'user_id',        
+        'id',
+        'id',            
+        'organization_id'  );
+}
+
 
     public function groups()
     {

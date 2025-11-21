@@ -31,11 +31,9 @@ class Group extends Model
     }
 
     public function members()
-    {
-        return $this->belongsToMany(User::class, 'group_members')
-            ->using(GroupMember::class)
-            ->withPivot('role');
-    }
+{
+    return $this->belongsToMany(Profile::class, 'group_members', 'group_id', 'user_id');
+}
 
     public function tasks()
     {

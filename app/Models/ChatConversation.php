@@ -32,15 +32,14 @@ class ChatConversation extends Model
         return $this->belongsTo(Organization::class);
     }
 
-    public function group()
+   public function group()
     {
-        return $this->belongsTo(Group::class);
+        return $this->belongsTo(Group::class, 'group_id');
     }
 
     public function members()
     {
-        return $this->belongsToMany(User::class, 'chat_members')
-            ->using(ChatMember::class);
+        return $this->belongsToMany(Profile::class, 'chat_members', 'conversation_id', 'user_id');
     }
 
     public function messages()
