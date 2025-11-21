@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Organization;
+use App\Models\Profile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+
 class AuthController extends Controller
 {
-        public function register(Request $request)
+    public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -19,6 +22,8 @@ class AuthController extends Controller
             'apellido_paterno' => 'required|string|max:255',
             'apellido_materno' => 'required|string|max:255',
             'telefono' => 'required|string|max:20',
+            'organization_name' => 'required|string|max:255',
+            'role' => 'required|in:jefe,profesor',
         ]);
 
         if ($validator->fails()) {
@@ -28,27 +33,47 @@ class AuthController extends Controller
             ], 422);
         }
 
-        if (User::where('email', $request->email)->exists()) {
-            return response()->json(['message' => 'El correo electrónico ya está en uso.'], 422);
+        try {
+            DB::beginTransaction();
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'apellido_paterno' => $request->apellido_paterno,
+                'apellido_materno' => $request->apellido_materno,
+                'telefono' => $request->telefono,
+                'activo' => true
+            ]);
+
+            $organization = Organization::create([
+                'name' => $request->organization_name,
+            ]);
+
+            $profile = Profile::create([
+                'user_id' => $user->id,
+                'organization_id' => $organization->id,
+                'display_name' => $user->name . ' ' . $user->apellido_paterno,
+                'role' => $request->role, 
+            ]);
+
+            DB::commit();
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'message' => 'Usuario registrado exitosamente',
+                'user' => $user->load('profile.organization'),
+                'token' => $token
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error al registrar usuario',
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'apellido_paterno' => $request->apellido_paterno,
-            'apellido_materno' => $request->apellido_materno,
-            'telefono' => $request->telefono,
-            'activo' => true
-        ]);
-
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'message' => 'Usuario registrado exitosamente',
-            'user' => $user,
-            'token' => $token
-        ], 201);
     }
 
     public function login(Request $request)
@@ -57,6 +82,7 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
+
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Errores de validación',
@@ -81,7 +107,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login exitoso',
-            'user' => $user,
+            'user' => $user->load('profile.organization'),
             'token' => $token
         ]);
     }
@@ -97,6 +123,6 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json($request->user()->load('profile.organization'));
     }
 }
