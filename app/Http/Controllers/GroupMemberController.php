@@ -34,21 +34,18 @@ class GroupMemberController extends Controller
 
     public function available(Request $request, $groupId)
     {
-        $orgId = $request->user()->profile->organization_id;
-
         $existingMemberIds = DB::table('group_members')
             ->where('group_id', $groupId)
             ->pluck('user_id');
 
         $available = Profile::with('user')
-            ->where('organization_id', $orgId)
             ->whereNotIn('id', $existingMemberIds)
             ->get()
             ->map(function($profile) {
                 return [
                     'profile_id' => $profile->id,
                     'display_name' => $profile->display_name,
-                    'email' => $profile->user->email,
+                    'email' => $profile->user ? $profile->user->email : 'Sin correo',
                     'role' => $profile->role
                 ];
             });

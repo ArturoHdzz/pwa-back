@@ -10,11 +10,11 @@ class Profile extends Model
     use HasUuids;
 
     protected $table = 'profiles';
-
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
+        'id',
         'user_id',
         'organization_id',
         'display_name',
@@ -23,7 +23,7 @@ class Profile extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class);
     }
 
     public function organization()
