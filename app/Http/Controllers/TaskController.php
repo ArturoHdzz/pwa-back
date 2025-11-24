@@ -1,50 +1,85 @@
 <?php
 
-// app/Http/Controllers/TaskController.php
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\Group;
+use App\Enums\TaskStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class TaskController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $groupId)
     {
-        $user = $request->user();
-        $orgId = $user->profile->organization_id;
+        $tasks = Task::where('group_id', $groupId)
+            ->withCount('assignees') 
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        $query = Task::query()->where('organization_id', $orgId);
-
-        if ($status = $request->query('status')) {
-            $query->where('status', $status);
-        }
-
-        return response()->json($query->orderBy('due_at')->get());
+        return response()->json($tasks);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, $groupId)
     {
         $user = $request->user();
-        $profile = $user->profile;
+        
+        if (!in_array($user->profile->role, ['jefe', 'profesor'])) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
 
-        $data = $request->validate([
-            'title' => ['required', 'string'],
-            'description' => ['nullable', 'string'],
-            'group_id' => ['nullable', 'string'],
-            'due_at' => ['nullable', 'date'],
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'due_date' => 'required|date',
         ]);
 
-        $task = Task::create([
-            'id' => (string) Str::uuid(),
-            'organization_id' => $profile->organization_id,
-            'group_id' => $data['group_id'] ?? null,
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'due_at' => $data['due_at'] ?? null,
-            'created_by' => $profile->id,
-        ]);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        return response()->json($task, 201);
+        return DB::transaction(function () use ($request, $groupId, $user) {
+            
+            $task = Task::create([
+                'id' => (string) Str::uuid(),
+                'organization_id' => $user->profile->organization_id,
+                'group_id' => $groupId,
+                'created_by' => $user->profile->id,
+                'title' => $request->title,
+                'description' => $request->description,
+                'due_at' => $request->due_date,
+                'status' => TaskStatus::PENDING 
+            ]);
+
+            $memberIds = DB::table('group_members')
+                ->where('group_id', $groupId)
+                ->pluck('user_id'); 
+
+            $assignments = [];
+            foreach ($memberIds as $memberId) {
+                $assignments[] = [
+                    'task_id' => $task->id,
+                    'user_id' => $memberId, 
+                ];
+            }
+
+            if (!empty($assignments)) {
+                DB::table('task_assignees')->insert($assignments);
+            }
+
+            return response()->json([
+                'message' => 'Tarea creada y asignada a ' . count($assignments) . ' miembros.',
+                'task' => $task
+            ], 201);
+        });
+    }
+
+    public function destroy(Request $request, $groupId, $taskId)
+    {
+        $task = Task::where('id', $taskId)->where('group_id', $groupId)->firstOrFail();
+        $task->delete();
+        return response()->json(['message' => 'Tarea eliminada']);
     }
 }
