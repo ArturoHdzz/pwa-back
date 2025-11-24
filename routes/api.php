@@ -7,6 +7,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\GroupController;
+use App\Http\Controllers\GroupMemberController; 
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -32,4 +34,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::put('/tasks/{id}', [TaskController::class, 'update']);
     Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
+
+    Route::get('/groups', [GroupController::class, 'index']);
+    Route::post('/groups', [GroupController::class, 'store']);
+    Route::get('/groups/{id}', [GroupController::class, 'show']);
+    Route::put('/groups/{id}', [GroupController::class, 'update']);
+    Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
+
+    Route::get('/groups/{id}/members', [GroupMemberController::class, 'index']);
+    Route::get('/groups/{id}/available-users', [GroupMemberController::class, 'available']);
+    Route::post('/groups/{id}/members', [GroupMemberController::class, 'store']);
+    Route::delete('/groups/{id}/members/{profileId}', [GroupMemberController::class, 'destroy']);
 });
