@@ -48,5 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/groups/{id}/tasks', [TaskController::class, 'index']);
     Route::post('/groups/{id}/tasks', [TaskController::class, 'store']);
+    Route::get('/groups/{id}/tasks/{taskId}', [TaskController::class, 'show']);
+    Route::post('/groups/{id}/tasks/{taskId}/grade', [TaskController::class, 'gradeStudent']);
     Route::delete('/groups/{id}/tasks/{taskId}', [TaskController::class, 'destroy']);
 });
