@@ -19,6 +19,7 @@ class Group extends Model
         'name',
         'description',
         'is_class',
+        'code',
     ];
 
     protected $casts = [

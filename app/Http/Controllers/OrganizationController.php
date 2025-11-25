@@ -10,7 +10,7 @@ class OrganizationController extends Controller
     function index(Request $request)
     {
         $user = $request->user();
-        $organizations = $user->organizations()->get();
+        $organizations = Organization::where('id', $user->profile->organization_id)->get(); 
         return response()->json($organizations);
     }
 

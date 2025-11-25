@@ -13,7 +13,7 @@ class Organization extends Model
     protected $keyType = 'string';
     public $timestamps = false;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'code'];
 
     public function profiles()
     {

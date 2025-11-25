@@ -38,8 +38,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tasks/{id}', [TaskController::class, 'update']);
     Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
 
-
-     Route::get('/groups', [GroupController::class, 'index']);
+    Route::post('/groups/join', [GroupController::class, 'joinByCode']);
+    Route::get('/groups', [GroupController::class, 'index']);
     Route::post('/groups', [GroupController::class, 'store']);
     Route::get('/groups/{id}', [GroupController::class, 'show']);
     Route::put('/groups/{id}', [GroupController::class, 'update']);
