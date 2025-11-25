@@ -82,4 +82,37 @@ class TaskController extends Controller
         $task->delete();
         return response()->json(['message' => 'Tarea eliminada']);
     }
+
+    public function show(Request $request, $groupId, $taskId)
+    {
+        $task = Task::where('id', $taskId)
+            ->where('group_id', $groupId)
+            ->with(['assignees' => function($query) {
+                $query->select('profiles.id', 'profiles.display_name', 'profiles.user_id')
+                      ->withPivot('status', 'submission_content', 'grade', 'feedback', 'submitted_at');
+            }])
+            ->firstOrFail();
+
+        return response()->json($task);
+    }
+
+    public function gradeStudent(Request $request, $groupId, $taskId)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:profiles,id',
+            'grade' => 'required|integer|min:0|max:100',
+            'feedback' => 'nullable|string'
+        ]);
+
+        DB::table('task_assignees')
+            ->where('task_id', $taskId)
+            ->where('user_id', $request->user_id)
+            ->update([
+                'grade' => $request->grade,
+                'feedback' => $request->feedback,
+                'status' => 'graded'
+            ]);
+
+        return response()->json(['message' => 'Calificación guardada']);
+    }
 }
