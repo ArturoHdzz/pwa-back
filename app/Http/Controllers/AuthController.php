@@ -39,24 +39,28 @@ class AuthController extends Controller
             DB::beginTransaction();
 
             $organization = null;
-            $role = $request->role;
+            $role = 'student';
 
             if ($request->filled('organization_code')) {
                 $inputCode = trim($request->organization_code);
-                
                 $organization = Organization::whereRaw('LOWER(code) = ?', [strtolower($inputCode)])->first();
 
                 if (!$organization) {
                     return response()->json([
                         'message' => 'Errores de validación',
-                        'errors' => ['organization_code' => ['El código de organización no existe. Verifícalo.']]
+                        'errors' => ['organization_code' => ['El código de organización no existe.']]
                     ], 422);
                 }
+                
+                $role = 'Alumno'; 
+
             } else {
                 $organization = Organization::create([
                     'name' => $request->organization_name,
                     'code' => strtolower(Str::random(6)) 
                 ]);
+                
+                $role = 'jefe';
             }
 
             $user = User::create([

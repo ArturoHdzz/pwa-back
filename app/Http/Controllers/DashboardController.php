@@ -13,6 +13,15 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        
+        if ($user->profile->role === 'Alumno' || $user->profile->role === 'User') {
+            return response()->json([
+                'is_student' => true,
+                'organization' => $user->profile->organization,
+                'stats' => null
+            ]);
+        }
+
         $orgId = $user->profile->organization_id;
         
         $organization = $user->profile->organization;

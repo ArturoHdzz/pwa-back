@@ -13,11 +13,17 @@ class GroupController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $organizationId = $user->profile->organization_id;
+        $profile = $user->profile;
 
-        $groups = Group::where('organization_id', $organizationId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        if ($profile->role === 'Alumno' || $profile->role === 'User') {
+            $groups = $profile->groups()
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $groups = Group::where('organization_id', $profile->organization_id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
         return response()->json($groups);
     }
