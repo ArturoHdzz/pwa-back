@@ -9,7 +9,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupMemberController;
-
+use App\Http\Controllers\DashboardController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -51,4 +51,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/groups/{id}/tasks/{taskId}/grade', [TaskController::class, 'gradeStudent']);
     Route::delete('/groups/{id}/tasks/{taskId}', [TaskController::class, 'destroy']);
 
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 });
