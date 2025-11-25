@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Models\ChatMessage;
 
 use App\Enums\ConversationType;
 use Illuminate\Database\Eloquent\Model;
@@ -46,4 +47,10 @@ class ChatConversation extends Model
     {
         return $this->hasMany(ChatMessage::class, 'conversation_id');
     }
+    
+        public function lastMessage()
+        {
+           return $this->hasOne(ChatMessage::class, 'conversation_id', 'id')
+            ->latest('created_at');
+        }
 }

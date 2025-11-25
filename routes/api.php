@@ -8,7 +8,8 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\GroupController;
-use App\Http\Controllers\GroupMemberController; 
+use App\Http\Controllers\GroupMemberController;
+
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -26,27 +27,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/organizations', [OrganizationController::class, 'index']);
 
     Route::get('/conversations', [ChatController::class, 'index']);
-    Route::post('/conversations/dm', [ChatController::class, 'startDm']);
+    Route::post('/conversations/dm', [ChatController::class, 'startConversation']);
+    Route::post('/conversations/group', [ChatController::class, 'startGroupConversation']);
     Route::get('/conversations/{id}/messages', [ChatController::class, 'messages']);
-    Route::post('/conversations/{id}/messages', [ChatController::class, 'send']);
+    Route::post('/conversations/{id}/messages', [ChatController::class, 'sendMessage']);
 
     Route::get('/tasks', [TaskController::class, 'index']);
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::put('/tasks/{id}', [TaskController::class, 'update']);
     Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
 
-    Route::get('/groups', [GroupController::class, 'index']);
+
+     Route::get('/groups', [GroupController::class, 'index']);
     Route::post('/groups', [GroupController::class, 'store']);
     Route::get('/groups/{id}', [GroupController::class, 'show']);
     Route::put('/groups/{id}', [GroupController::class, 'update']);
     Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
 
     Route::get('/groups/{id}/members', [GroupMemberController::class, 'index']);
-    Route::get('/groups/{id}/available-users', [GroupMemberController::class, 'available']);
-    Route::post('/groups/{id}/members', [GroupMemberController::class, 'store']);
-    Route::delete('/groups/{id}/members/{profileId}', [GroupMemberController::class, 'destroy']);
-
     Route::get('/groups/{id}/tasks', [TaskController::class, 'index']);
     Route::post('/groups/{id}/tasks', [TaskController::class, 'store']);
     Route::delete('/groups/{id}/tasks/{taskId}', [TaskController::class, 'destroy']);
+
 });
