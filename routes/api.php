@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
 
     Route::get('/organizations', [OrganizationController::class, 'index']);
+    Route::get('/organizations/{organizationId}', [OrganizationController::class, 'show']);
 
     Route::get('/conversations', [ChatController::class, 'index']);
     Route::post('/conversations/dm', [ChatController::class, 'startConversation']);

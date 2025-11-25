@@ -55,6 +55,11 @@ class User extends Authenticatable
         'organization_id'  );
 }
 
+public function profiles()
+    {
+        return $this->hasMany(Profile::class);
+    }
+
 
     public function groups()
     {

@@ -12,11 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('profiles', function (Blueprint $table) {
-            $table->uuid('id')->primary();
+            $table->uuid('id')->primary()->default(DB::raw('(UUID())'));
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignUuid('organization_id')->constrained('organizations')->cascadeOnDelete();
             $table->string('display_name')->nullable();
-            $table->enum('role', ['jefe', 'profesor'])->default('profesor');
+            $table->enum('role', ['jefe', 'profesor','Alumno','User'])->default('profesor');
             $table->timestamps();
         });
     }

@@ -24,6 +24,12 @@ class Organization extends Model
     {
         return $this->hasMany(Group::class);
     }
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'profiles')
+            ->withPivot(['display_name', 'role'])
+            ->withTimestamps();
+    }
 
     public function tasks()
     {
