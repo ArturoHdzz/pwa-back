@@ -46,6 +46,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
 
     Route::get('/groups/{id}/members', [GroupMemberController::class, 'index']);
+    
+    Route::post('/groups/{id}/members', [GroupMemberController::class, 'store']); 
+    Route::delete('/groups/{id}/members/{profileId}', [GroupMemberController::class, 'destroy']); 
+    Route::get('/groups/{id}/available-users', [GroupMemberController::class, 'available']); 
+
     Route::get('/groups/{id}/tasks', [TaskController::class, 'index']);
     Route::post('/groups/{id}/tasks', [TaskController::class, 'store']);
     Route::get('/groups/{id}/tasks/{taskId}', [TaskController::class, 'show']);
