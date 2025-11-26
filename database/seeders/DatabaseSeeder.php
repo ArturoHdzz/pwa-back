@@ -7,6 +7,9 @@ use App\Models\Organization;
 use App\Models\Profile;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 
 class DatabaseSeeder extends Seeder
 {
@@ -30,8 +33,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => User::first()->id,
             'organization_id' => Organization::factory()->create(['name' => 'Universidad tecnologica de Torreon'])->id,
             'display_name' => 'Victoria Jaime',
-            'role' => 'jefe',
-        ]);
+            'role' => 'jefe',]);
         Profile::factory(10)->create();
         Organization::factory(5)->create();
 
