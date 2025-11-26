@@ -34,8 +34,10 @@ class DatabaseSeeder extends Seeder
             'organization_id' => Organization::factory()->create(['name' => 'Universidad tecnologica de Torreon'])->id,
             'display_name' => 'Victoria Jaime',
             'role' => 'jefe',]);
-        Profile::factory(10)->create();
-        Organization::factory(5)->create();
+        Profile::factory(10)->create([
+            'organization_id' => Organization::factory()->create()->id,
+        ]);
+  
 
     }
 }

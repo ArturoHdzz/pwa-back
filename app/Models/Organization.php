@@ -29,7 +29,7 @@ class Organization extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'profiles')
-            ->withPivot(['display_name', 'role'])
+            ->withPivot(['display_name', 'role', 'id'])
             ->withTimestamps();
     }
 

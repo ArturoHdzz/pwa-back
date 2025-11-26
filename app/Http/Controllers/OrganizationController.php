@@ -10,7 +10,7 @@ class OrganizationController extends Controller
     function index(Request $request)
     {
         $user = $request->user();
-        $organizations = Organization::where('id', $user->profile->organization_id)->get(); 
+        $organizations = $user->organizations()->get();
         return response()->json($organizations);
     }
 
@@ -18,13 +18,12 @@ class OrganizationController extends Controller
     {
         $authUser = $request->user();
 
-        // Solo busca organizaciones a las que pertenece el usuario autenticado
         $organization = $authUser->organizations()
             ->with([
                 'users' => function ($q) {
                     $q->select('users.id', 'users.name', 'users.apellido_paterno', 'users.apellido_materno', 'users.email');
                 },
-                'groups' // todos los grupos de esa org
+                'groups' 
             ])
             ->findOrFail($organizationId);
         $users = $organization->users
@@ -45,6 +44,7 @@ class OrganizationController extends Controller
                     'email'           => $user->email,
                     'display_name'    => $user->pivot->display_name,
                     'role'            => $user->pivot->role,
+                    'profile_id'     => $user->pivot->id,
                 ];
             }),
             'groups' => $organization->groups->map(function ($group) {

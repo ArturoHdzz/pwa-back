@@ -122,12 +122,15 @@ class ChatController extends Controller
 
             private function startDmInternal($myProfile, $otherProfileId)
             {
-                // buscar DM existente
                 $existing = ChatConversation::query()
                     ->where('type', 'dm')
                     ->where('organization_id', $myProfile->organization_id)
-                    ->whereHas('members', fn($q) => $q->where('user_id', $myProfile->id))
-                    ->whereHas('members', fn($q) => $q->where('user_id', $otherProfileId))
+                    ->whereHas('members', function ($q) use ($myProfile) {
+                        $q->where('chat_members.user_id', $myProfile->id);
+                    })
+                    ->whereHas('members', function ($q) use ($otherProfileId) {
+                        $q->where('chat_members.user_id', $otherProfileId);
+                    })
                     ->first();
 
                 if ($existing) return response()->json($existing);
@@ -141,6 +144,9 @@ class ChatController extends Controller
 
                 return response()->json($conv);
             }
+
+
+
 
             private function startMultiInternal($myProfile, $participants)
             {
