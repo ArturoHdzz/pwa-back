@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -22,8 +23,9 @@ class AuthController extends Controller
             'apellido_paterno' => 'required|string|max:255',
             'apellido_materno' => 'required|string|max:255',
             'telefono' => 'required|string|max:20',
-            'organization_name' => 'required|string|max:255',
             'role' => 'required|in:jefe,profesor',
+            'organization_name' => 'required_without:organization_code|string|max:255|nullable',
+            'organization_code' => 'nullable|string', 
         ]);
 
         if ($validator->fails()) {
@@ -36,6 +38,31 @@ class AuthController extends Controller
         try {
             DB::beginTransaction();
 
+            $organization = null;
+            $role = 'student';
+
+            if ($request->filled('organization_code')) {
+                $inputCode = trim($request->organization_code);
+                $organization = Organization::whereRaw('LOWER(code) = ?', [strtolower($inputCode)])->first();
+
+                if (!$organization) {
+                    return response()->json([
+                        'message' => 'Errores de validación',
+                        'errors' => ['organization_code' => ['El código de organización no existe.']]
+                    ], 422);
+                }
+                
+                $role = 'Alumno'; 
+
+            } else {
+                $organization = Organization::create([
+                    'name' => $request->organization_name,
+                    'code' => strtolower(Str::random(6)) 
+                ]);
+                
+                $role = 'jefe';
+            }
+
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -46,25 +73,20 @@ class AuthController extends Controller
                 'activo' => true
             ]);
 
-            $organization = Organization::create([
-                'name' => $request->organization_name,
-            ]);
-
             $profile = Profile::create([
                 'user_id' => $user->id,
                 'organization_id' => $organization->id,
                 'display_name' => $user->name . ' ' . $user->apellido_paterno,
-                'role' => $request->role,
+                'role' => $role,
             ]);
 
             DB::commit();
 
             $token = $user->createToken('auth_token')->plainTextToken;
-
             $user->load('profile.organization');
 
             return response()->json([
-                'message' => 'Usuario registrado exitosamente',
+                'message' => $request->filled('organization_code') ? 'Te has unido a la organización exitosamente' : 'Organización creada exitosamente',
                 'user' => $user,
                 'token' => $token
             ], 201);

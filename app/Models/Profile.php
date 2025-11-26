@@ -32,4 +32,10 @@ class Profile extends Model
     {
         return $this->belongsTo(Organization::class);
     }
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class, 'group_members', 'user_id', 'group_id')
+                    ->withPivot('role');
+    }
 }

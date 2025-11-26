@@ -38,14 +38,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tasks/{id}', [TaskController::class, 'update']);
     Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
 
-
-     Route::get('/groups', [GroupController::class, 'index']);
+    Route::post('/groups/join', [GroupController::class, 'joinByCode']);
+    Route::get('/groups', [GroupController::class, 'index']);
     Route::post('/groups', [GroupController::class, 'store']);
     Route::get('/groups/{id}', [GroupController::class, 'show']);
     Route::put('/groups/{id}', [GroupController::class, 'update']);
     Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
 
     Route::get('/groups/{id}/members', [GroupMemberController::class, 'index']);
+    
+    Route::post('/groups/{id}/members', [GroupMemberController::class, 'store']); 
+    Route::delete('/groups/{id}/members/{profileId}', [GroupMemberController::class, 'destroy']); 
+    Route::get('/groups/{id}/available-users', [GroupMemberController::class, 'available']); 
+
     Route::get('/groups/{id}/tasks', [TaskController::class, 'index']);
     Route::post('/groups/{id}/tasks', [TaskController::class, 'store']);
     Route::get('/groups/{id}/tasks/{taskId}', [TaskController::class, 'show']);

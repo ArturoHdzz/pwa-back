@@ -6,17 +6,24 @@ use App\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class GroupController extends Controller
 {
     public function index(Request $request)
     {
         $user = $request->user();
-        $organizationId = $user->profile->organization_id;
+        $profile = $user->profile;
 
-        $groups = Group::where('organization_id', $organizationId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        if ($profile->role === 'Alumno' || $profile->role === 'User') {
+            $groups = $profile->groups()
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            $groups = Group::where('organization_id', $profile->organization_id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
 
         return response()->json($groups);
     }
@@ -46,12 +53,48 @@ class GroupController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'is_class' => $request->is_class ?? true,
+            'code' => strtoupper(Str::random(6))
         ]);
 
         return response()->json([
             'message' => 'Grupo creado exitosamente',
             'group' => $group
         ], 201);
+    }
+
+    public function joinByCode(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string'
+        ]);
+
+        $user = $request->user();
+        
+        $group = Group::where('code', $request->code)->first();
+
+        if (!$group) {
+            return response()->json(['message' => 'Código de grupo inválido'], 404);
+        }
+
+        $exists = DB::table('group_members')
+            ->where('group_id', $group->id)
+            ->where('user_id', $user->profile->id)
+            ->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'Ya eres miembro de este grupo'], 422);
+        }
+
+        DB::table('group_members')->insert([
+            'group_id' => $group->id,
+            'user_id' => $user->profile->id,
+            'role' => 'user'
+        ]);
+
+        return response()->json([
+            'message' => 'Te has unido al grupo exitosamente',
+            'group' => $group
+        ]);
     }
 
     public function show(Request $request, $id)
