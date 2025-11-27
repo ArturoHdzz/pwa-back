@@ -24,15 +24,17 @@ class Task extends Model
         'title',
         'description',
         'status',
+        'is_individual', 
         'due_at',
         'created_by',
         'created_at',
     ];
 
     protected $casts = [
-        'status'     => TaskStatus::class,
-        'due_at'     => 'datetime',
-        'created_at' => 'datetime',
+        'status'        => TaskStatus::class,
+        'is_individual' => 'boolean',
+        'due_at'        => 'datetime',
+        'created_at'    => 'datetime',
     ];
 
     public function organization()

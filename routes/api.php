@@ -33,10 +33,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/conversations/{id}/messages', [ChatController::class, 'messages']);
     Route::post('/conversations/{id}/messages', [ChatController::class, 'sendMessage']);
 
-    Route::get('/tasks', [TaskController::class, 'index']);
-    Route::post('/tasks', [TaskController::class, 'store']);
-    Route::put('/tasks/{id}', [TaskController::class, 'update']);
-    Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
+    Route::get('/my-tasks', [TaskController::class, 'myTasks']); 
+    Route::get('/tasks/individual', [TaskController::class, 'individualTasks']); 
+    Route::post('/tasks/individual', [TaskController::class, 'storeIndividual']); 
+    Route::get('/tasks/individual/{taskId}', [TaskController::class, 'showIndividual']); 
+    Route::post('/tasks/individual/{taskId}/grade', [TaskController::class, 'gradeIndividual']);
+    Route::delete('/tasks/individual/{taskId}', [TaskController::class, 'destroyIndividual']);
 
     Route::post('/groups/join', [GroupController::class, 'joinByCode']);
     Route::get('/groups', [GroupController::class, 'index']);
@@ -46,7 +48,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/groups/{id}', [GroupController::class, 'destroy']);
 
     Route::get('/groups/{id}/members', [GroupMemberController::class, 'index']);
-    
     Route::post('/groups/{id}/members', [GroupMemberController::class, 'store']); 
     Route::delete('/groups/{id}/members/{profileId}', [GroupMemberController::class, 'destroy']); 
     Route::get('/groups/{id}/available-users', [GroupMemberController::class, 'available']); 
