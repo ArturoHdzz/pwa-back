@@ -165,74 +165,74 @@ class ChatController extends Controller
 
 
             public function startGroupConversation(Request $request)
-    {
-    $request->validate([
-        'group_id' => ['required', 'uuid'],
-    ]);
+                {
+                $request->validate([
+                    'group_id' => ['required', 'uuid'],
+                ]);
 
-    $user = $request->user();
-    $profile = $user->profile;
+                $user = $request->user();
+                $profile = $user->profile;
 
-    $groupId = $request->group_id;
+                $groupId = $request->group_id;
 
-    // Verificar si pertenece al grupo
-    $belongs = \DB::table('group_members')
-        ->where('group_id', $groupId)
-        ->where('user_id', $profile->id)
-        ->exists();
+                // Verificar si pertenece al grupo
+                $belongs = \DB::table('group_members')
+                    ->where('group_id', $groupId)
+                    ->where('user_id', $profile->id)
+                    ->exists();
 
-    if (! $belongs) {
-        return response()->json(['error' => 'No perteneces a este grupo'], 403);
-    }
+                if (! $belongs) {
+                    return response()->json(['error' => 'No perteneces a este grupo'], 403);
+                }
 
-    // verificar si ya existe chat
-    $existing = ChatConversation::where('group_id', $groupId)->first();
-    if ($existing) return response()->json($existing);
+                // verificar si ya existe chat
+                $existing = ChatConversation::where('group_id', $groupId)->first();
+                if ($existing) return response()->json($existing);
 
-    // crear chat
-    $conv = ChatConversation::create([
-        'organization_id' => $profile->organization_id,
-        'type' => 'group',
-        'group_id' => $groupId,
-    ]);
+                // crear chat
+                $conv = ChatConversation::create([
+                    'organization_id' => $profile->organization_id,
+                    'type' => 'group',
+                    'group_id' => $groupId,
+                ]);
 
-    return response()->json($conv);
-}
-
-        public function sendMessage(Request $request, $conversationId)
-        {
-            $user = $request->user();
-            $profile = $user->profile;
-
-            $request->validate([
-                'body' => ['required', 'string'],
-            ]);
-
-            $conv = ChatConversation::with('members')->findOrFail($conversationId);
-
-            $isMember = $conv->members->contains('id', $profile->id);
-
-            if (! $isMember) {
-                return response()->json(['error' => 'No perteneces a esta conversación'], 403);
+                return response()->json($conv);
             }
 
-            $msg = ChatMessage::create([
-              
-                'conversation_id' => $conv->id,
-                'organization_id' => $conv->organization_id,
-                'sender_id'       => $profile->id,   
-                'body'            => $request->body,
-            ]);
+                    public function sendMessage(Request $request, $conversationId)
+                    {
+                        $user = $request->user();
+                        $profile = $user->profile;
 
-            return response()->json([
-        'id'         => $msg->id,
-        'body'       => $msg->body,
-        'created_at' => $msg->created_at,
-        'sender_id'  => $msg->sender_id,
-        'is_me'      => true,  
-    ], 201);
+                        $request->validate([
+                            'body' => ['required', 'string'],
+                        ]);
 
-        }
+                        $conv = ChatConversation::with('members')->findOrFail($conversationId);
+
+                        // $isMember = $conv->members->contains('id', $profile->id);
+
+                        // if (! $isMember) {
+                        //     return response()->json(['error' => 'No perteneces a esta conversación'], 403);
+                        // }
+
+                        $msg = ChatMessage::create([
+                        
+                            'conversation_id' => $conv->id,
+                            'organization_id' => $conv->organization_id,
+                            'sender_id'       => $profile->id,   
+                            'body'            => $request->body,
+                        ]);
+
+                        return response()->json([
+                    'id'         => $msg->id,
+                    'body'       => $msg->body,
+                    'created_at' => $msg->created_at,
+                    'sender_id'  => $msg->sender_id,
+                    'is_me'      => true,  
+                ], 201);
+
+                    }
 
 
     public function messages(Request $request, string $conversationId)
@@ -244,11 +244,23 @@ class ChatController extends Controller
 
         $conv = ChatConversation::with('members')->findOrFail($conversationId);
 
-        // validar que es miembro
-        $isMember = $conv->members->contains('id', $profile->id);
-        if (! $isMember) {
-            return response()->json(['error' => 'No perteneces a esta conversación'], 403);
-        }
+   
+    //     $canAccess = false;
+
+    // if ($conv->type === 'group') {
+    //     // Conversación de GRUPO → validar en group_members
+    //     $canAccess = DB::table('group_members')
+    //         ->where('group_id', $conv->group_id)
+    //         ->where('user_id', $profile->id)   // user_id = profile_id en tu schema
+    //         ->exists();
+    // } else {
+    //     // DM / multi → validar en chat_members (relación members)
+    //     $canAccess = $conv->members->contains('id', $profile->id);
+    // }
+
+    // if (! $canAccess) {
+    //     return response()->json(['error' => 'No perteneces a esta conversación'], 403);
+    // }
 
         $messages = ChatMessage::query()
             ->where('conversation_id', $conv->id)
