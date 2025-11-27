@@ -34,12 +34,27 @@ class GroupMemberController extends Controller
 
     public function available(Request $request, $groupId)
     {
+        $user = $request->user();
+        $organizationId = $user->profile->organization_id;
+
+        $group = Group::where('id', $groupId)
+            ->where('organization_id', $organizationId)
+            ->first();
+
+        if (!$group) {
+            return response()->json([
+                'message' => 'No tienes acceso a este grupo.'
+            ], 403);
+        }
+
         $existingMemberIds = DB::table('group_members')
             ->where('group_id', $groupId)
             ->pluck('user_id');
 
         $available = Profile::with('user')
+            ->where('organization_id', $organizationId)
             ->whereNotIn('id', $existingMemberIds)
+            ->where('id', '!=', $user->profile->id)
             ->get()
             ->map(function($profile) {
                 return [
@@ -59,9 +74,22 @@ class GroupMemberController extends Controller
             'profile_id' => 'required|exists:profiles,id'
         ]);
 
+        $user = $request->user();
+        $organizationId = $user->profile->organization_id;
+
         $group = Group::where('id', $groupId)
-            ->where('organization_id', $request->user()->profile->organization_id)
+            ->where('organization_id', $organizationId)
             ->firstOrFail();
+
+        $profileToAdd = Profile::where('id', $request->profile_id)
+            ->where('organization_id', $organizationId) 
+            ->first();
+
+        if (!$profileToAdd) {
+            return response()->json([
+                'message' => 'El usuario no pertenece a tu organización.'
+            ], 403);
+        }
 
         $exists = DB::table('group_members')
             ->where('group_id', $groupId)
@@ -69,7 +97,7 @@ class GroupMemberController extends Controller
             ->exists();
 
         if ($exists) {
-            return response()->json(['message' => 'El usuario ya es miembro'], 422);
+            return response()->json(['message' => 'El usuario ya es miembro del grupo.'], 422);
         }
 
         DB::table('group_members')->insert([
