@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\Group;
+use App\Models\Profile;
 use App\Enums\TaskStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -72,6 +73,7 @@ class TaskController extends Controller
     public function store(Request $request, $groupId = null)
     {
         $user = $request->user();
+        $organizationId = $user->profile->organization_id;
         
         if (!in_array($user->profile->role, ['jefe', 'profesor'])) {
             return response()->json(['message' => 'No autorizado'], 403);
@@ -90,13 +92,37 @@ class TaskController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        return DB::transaction(function () use ($request, $groupId, $user) {
+        if ($request->filled('assignee_ids')) {
+            $validAssignees = Profile::whereIn('id', $request->assignee_ids)
+                ->where('organization_id', $organizationId)
+                ->count();
+
+            if ($validAssignees !== count($request->assignee_ids)) {
+                return response()->json([
+                    'message' => 'Algunos usuarios no pertenecen a tu organización.'
+                ], 403);
+            }
+        }
+
+        if ($groupId) {
+            $group = Group::where('id', $groupId)
+                ->where('organization_id', $organizationId)
+                ->first();
+
+            if (!$group) {
+                return response()->json([
+                    'message' => 'El grupo no pertenece a tu organización.'
+                ], 403);
+            }
+        }
+
+        return DB::transaction(function () use ($request, $groupId, $user, $organizationId) {
             
             $isIndividual = $request->boolean('is_individual', false);
             
             $task = Task::create([
                 'id' => (string) Str::uuid(),
-                'organization_id' => $user->profile->organization_id,
+                'organization_id' => $organizationId,
                 'group_id' => $groupId,
                 'created_by' => $user->profile->id,
                 'title' => $request->title,

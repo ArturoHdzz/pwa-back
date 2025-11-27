@@ -26,9 +26,10 @@ class OrganizationController extends Controller
                 'groups' 
             ])
             ->findOrFail($organizationId);
+
         $users = $organization->users
-        ->filter(fn($user) => $user-> id !== $authUser->id)
-        ->values();
+            ->filter(fn($user) => $user->id !== $authUser->id)
+            ->values();
 
         return response()->json([
             'organization' => [

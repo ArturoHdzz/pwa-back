@@ -47,19 +47,27 @@ class GroupController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $group = Group::create([
-            'id' => (string) Str::uuid(),
-            'organization_id' => $profile->organization_id,
-            'name' => $request->name,
-            'description' => $request->description,
-            'is_class' => $request->is_class ?? true,
-            'code' => strtoupper(Str::random(6))
-        ]);
+        return DB::transaction(function () use ($request, $profile) {
+            $group = Group::create([
+                'id' => (string) Str::uuid(),
+                'organization_id' => $profile->organization_id,
+                'name' => $request->name,
+                'description' => $request->description,
+                'is_class' => $request->is_class ?? true,
+                'code' => strtoupper(Str::random(6))
+            ]);
 
-        return response()->json([
-            'message' => 'Grupo creado exitosamente',
-            'group' => $group
-        ], 201);
+            DB::table('group_members')->insert([
+                'group_id' => $group->id,
+                'user_id' => $profile->id,
+                'role' => 'lider'
+            ]);
+
+            return response()->json([
+                'message' => 'Grupo creado exitosamente',
+                'group' => $group
+            ], 201);
+        });
     }
 
     public function joinByCode(Request $request)
