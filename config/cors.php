@@ -19,7 +19,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:4200')],
+    'allowed_origins' => [
+        'http://localhost:4200',
+        'https://pwa-chat.vercel.app',
+    ],
 
     'allowed_origins_patterns' => [],
 
