@@ -59,4 +59,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/groups/{id}/tasks/{taskId}', [TaskController::class, 'destroy']);
 
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::post('/push-subscriptions', [PushSubscriptionController::class, 'store']);
 });

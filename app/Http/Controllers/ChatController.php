@@ -223,14 +223,35 @@ class ChatController extends Controller
                             'sender_id'       => $profile->id,   
                             'body'            => $request->body,
                         ]);
+                        $targets = [];
+
+                        if ($conv->type === 'group') {
+                            $targets = \DB::table('group_members')
+                                ->where('group_id', $conv->group_id)
+                                ->where('user_id', '!=', $profile->id)
+                                ->pluck('user_id'); // aquí user_id = profile_id
+                        } else {
+                            $targets = $conv->members
+                                ->where('id', '!=', $profile->id)
+                                ->pluck('id'); // ids de Profile
+                        }
+
+                        // Mandar WebPush a cada profile
+                        foreach ($targets as $profileId) {
+                            $p = Profile::find($profileId);
+                            foreach ($p->pushSubscriptions as $sub) {
+                                // usar webpush-php directamente
+                                // o el canal laravel-notification-channels/webpush con Notifications.
+                            }
+                        }
 
                         return response()->json([
-                    'id'         => $msg->id,
-                    'body'       => $msg->body,
-                    'created_at' => $msg->created_at,
-                    'sender_id'  => $msg->sender_id,
-                    'is_me'      => true,  
-                ], 201);
+                                'id'         => $msg->id,
+                                'body'       => $msg->body,
+                                'created_at' => $msg->created_at,
+                                'sender_id'  => $msg->sender_id,
+                                'is_me'      => true,  
+                            ], 201);
 
                     }
 

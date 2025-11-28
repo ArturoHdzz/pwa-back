@@ -38,4 +38,10 @@ class Profile extends Model
         return $this->belongsToMany(Group::class, 'group_members', 'user_id', 'group_id')
                     ->withPivot('role');
     }
+
+    public function pushSubscriptions()
+{
+    return $this->hasMany(PushSubscription::class);
+}
+
 }
