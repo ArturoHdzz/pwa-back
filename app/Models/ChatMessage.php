@@ -21,6 +21,7 @@ class ChatMessage extends Model
         'organization_id',
         'sender_id',
         'body',
+        'attachment_path',
         'created_at',
     ];
 
@@ -41,5 +42,14 @@ class ChatMessage extends Model
     public function sender()
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function getAttachmentUrlAttribute(): ?string
+    {
+        if (! $this->attachment_path) {
+            return null;
+        }
+
+        return asset('storage/' . $this->attachment_path);
     }
 }

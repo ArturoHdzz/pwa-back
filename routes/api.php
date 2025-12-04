@@ -10,6 +10,7 @@ use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupMemberController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TaskAssigneeController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -57,7 +58,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/groups/{id}/tasks/{taskId}', [TaskController::class, 'show']);
     Route::post('/groups/{id}/tasks/{taskId}/grade', [TaskController::class, 'gradeStudent']);
     Route::delete('/groups/{id}/tasks/{taskId}', [TaskController::class, 'destroy']);
+    Route::post('/tasks/{task}/submit', [TaskAssigneeController::class, 'submit']);
+    Route::patch('/tasks/{task}/status', [TaskAssigneeController::class, 'updateStatus']);
+
 
     Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::post('/push-subscriptions', [PushSubscriptionController::class, 'store']);
+    Route::post('/push/mobile-token', [MobilePushTokenController::class, 'store']);
 });

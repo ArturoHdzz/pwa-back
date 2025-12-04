@@ -43,5 +43,10 @@ class Profile extends Model
 {
     return $this->hasMany(PushSubscription::class);
 }
+public function mobilePushTokens()
+{
+    return $this->hasMany(MobilePushToken::class);
+}
+
 
 }

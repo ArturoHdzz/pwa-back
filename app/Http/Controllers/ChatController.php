@@ -2,7 +2,8 @@
 // app/Http/Controllers/ChatController.php
 namespace App\Http\Controllers;
 use App\Models\Profile;
-
+use App\Models\MobilePushToken;
+use App\Services\FcmService;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use Illuminate\Http\Request;
@@ -204,10 +205,6 @@ class ChatController extends Controller
                         $user = $request->user();
                         $profile = $user->profile;
 
-                        $request->validate([
-                            'body' => ['required', 'string'],
-                        ]);
-
                         $conv = ChatConversation::with('members')->findOrFail($conversationId);
 
                         // $isMember = $conv->members->contains('id', $profile->id);
@@ -216,43 +213,72 @@ class ChatController extends Controller
                         //     return response()->json(['error' => 'No perteneces a esta conversación'], 403);
                         // }
 
-                        $msg = ChatMessage::create([
-                        
-                            'conversation_id' => $conv->id,
-                            'organization_id' => $conv->organization_id,
-                            'sender_id'       => $profile->id,   
-                            'body'            => $request->body,
-                        ]);
-                        $targets = [];
+                        $data = $request->validate([
+        'body'  => ['nullable', 'string'],
+        'image' => ['nullable', 'image', 'max:10240'], // 10MB
+    ]);
 
-                        if ($conv->type === 'group') {
-                            $targets = \DB::table('group_members')
-                                ->where('group_id', $conv->group_id)
-                                ->where('user_id', '!=', $profile->id)
-                                ->pluck('user_id'); // aquí user_id = profile_id
-                        } else {
-                            $targets = $conv->members
-                                ->where('id', '!=', $profile->id)
-                                ->pluck('id'); // ids de Profile
-                        }
+    if (empty($data['body']) && ! $request->hasFile('image')) {
+        return response()->json([
+            'message' => 'Debes enviar texto o una imagen.',
+        ], 422);
+    }
 
-                        // Mandar WebPush a cada profile
-                        foreach ($targets as $profileId) {
-                            $p = Profile::find($profileId);
-                            foreach ($p->pushSubscriptions as $sub) {
-                                // usar webpush-php directamente
-                                // o el canal laravel-notification-channels/webpush con Notifications.
-                            }
-                        }
+    $imagePath = null;
 
-                        return response()->json([
-                                'id'         => $msg->id,
-                                'body'       => $msg->body,
-                                'created_at' => $msg->created_at,
-                                'sender_id'  => $msg->sender_id,
-                                'is_me'      => true,  
-                            ], 201);
+    if ($request->hasFile('image')) {
+        $imagePath = $request->file('image')->store(
+            "chat/{$conv->id}/{$profile->id}",
+            'public'
+        );
+    }
 
+    $message = ChatMessage::create([
+        'conversation_id' => $conv->id,
+        'organization_id' => $profile->organization_id,
+        'sender_id'       => $profile->id,
+        'body'            => $data['body'] ?? null,
+        'attachment_path' => $imagePath,
+        'created_at'      => now(),
+    ]);
+
+
+
+    $recipientProfiles = $conv->members
+        ->where('id', '!=', $profile->id); // todos menos el que envía
+
+    $tokens = MobilePushToken::whereIn('profile_id', $recipientProfiles->pluck('id'))
+        ->pluck('token')
+        ->all();
+
+    if (!empty($tokens)) {
+        $title = 'Nuevo mensaje';
+        $bodyPreview = $message->body
+            ? mb_substr($message->body, 0, 50)
+            : '📷 Imagen';
+
+        $this->fcm->sendToTokens(
+            $tokens,
+            [
+                'title' => $title,
+                'body'  => $bodyPreview,
+            ],
+            [
+                'conversation_id' => (string) $conv->id,
+                'sender_id'       => (string) $profile->id,
+                'type'            => 'chat_message',
+            ]
+        );
+    }
+
+    return response()->json([
+        'id'           => $message->id,
+        'body'         => $message->body,
+        'image_url'    => $message->attachment_url,
+        'created_at'   => $message->created_at,
+        'sender_id'    => $message->sender_id,
+        'is_me'        => true,
+    ], 201);
                     }
 
 
@@ -293,6 +319,7 @@ class ChatController extends Controller
             return [
                 'id'         => $m->id,
                 'body'       => $m->body,
+                'image_url'  => $m->attachment_url, 
                 'created_at' => $m->created_at,
                 'is_me'      => $m->sender_id === $profile->id,
                 'sender_id'  => $m->sender_id,
