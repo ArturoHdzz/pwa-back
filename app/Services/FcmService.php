@@ -52,10 +52,13 @@ class FcmService
 
         $jwt = $this->encodeJwt($header, $payload, $this->privateKey);
 
-        $response = Http::asForm()->post($aud, [
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion'  => $jwt,
-        ]);
+        $response = Http::asForm()
+    ->withoutVerifying() // 👈 desactiva la validación SSL (SOLO DEV)
+    ->post($aud, [
+        'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        'assertion'  => $jwt,
+    ]);
+
 
         if (! $response->successful()) {
             throw new \RuntimeException('Error obteniendo access_token de Google: ' . $response->body());
