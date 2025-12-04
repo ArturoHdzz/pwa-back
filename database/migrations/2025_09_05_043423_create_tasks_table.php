@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignUuid('group_id')->nullable()->constrained('groups')->nullOnDelete();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->string('status')->default('todo');
+            $table->string('status')->default('pending');
             $table->timestamp('due_at')->nullable();
             $table->foreignUuid('created_by')->constrained('profiles');
             $table->timestamps();

@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::table('tasks', function (Blueprint $table) {
             if (!Schema::hasColumn('tasks', 'status')) {
-                $table->string('status')->default('todo');
+
+                $table->string('status')->default('pending');
             }
         });
     }

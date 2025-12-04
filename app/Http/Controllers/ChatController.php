@@ -249,8 +249,7 @@ class ChatController extends Controller
 
 
     $recipientProfiles = $conv->members
-        ->where('id', '!=', $profile->id); // todos menos el que envía
-
+        ->where('id', '!=', $profile->id); 
     $tokens = MobilePushToken::whereIn('profile_id', $recipientProfiles->pluck('id'))
         ->pluck('token')
         ->all();
