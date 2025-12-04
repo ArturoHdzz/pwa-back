@@ -4,14 +4,18 @@ namespace App\Http\Controllers;
 use App\Models\Profile;
 use App\Models\MobilePushToken;
 use App\Services\FcmService;
-use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Models\ChatConversation;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Enums\ConversationType;
 
 class ChatController extends Controller
 {
+    public function __construct(private FcmService $fcm)
+    {
+    }
 
     //ver todas las conversaciones del usuario
     public function index(Request $request)
