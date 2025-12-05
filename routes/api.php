@@ -11,8 +11,7 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupMemberController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TaskAssigneeController;
-use App\Http\Controllers\MobilePushTokenController;
-use App\Http\Controllers\PushSubscriptionController;
+
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -65,6 +64,4 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    Route::post('/push-subscriptions', [PushSubscriptionController::class, 'store']);
-    Route::post('/push/mobile-token', [MobilePushTokenController::class, 'store']);
 });

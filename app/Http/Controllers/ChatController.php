@@ -2,8 +2,7 @@
 // app/Http/Controllers/ChatController.php
 namespace App\Http\Controllers;
 use App\Models\Profile;
-use App\Models\MobilePushToken;
-use App\Services\FcmService;
+
 use App\Models\ChatMessage;
 use App\Models\ChatConversation;
 
@@ -13,10 +12,7 @@ use App\Enums\ConversationType;
 
 class ChatController extends Controller
 {
-    public function __construct(private FcmService $fcm)
-    {
-    }
-
+   
     //ver todas las conversaciones del usuario
     public function index(Request $request)
     {
@@ -240,40 +236,7 @@ class ChatController extends Controller
                         'created_at'      => now(),
                     ]);
 
-                    // --------- FCM: enviar noti a todos los demás miembros ----------
-                    $recipientProfiles = $conv->members
-                        ->where('id', '!=', $profile->id);
-
-                    $tokens = \App\Models\MobilePushToken::whereIn(
-                            'profile_id',
-                            $recipientProfiles->pluck('id')
-                        )
-                        ->pluck('token')
-                        ->unique()
-                        ->values()
-                        ->all();
-
-                    if (! empty($tokens)) {
-                        $title = 'Nuevo mensaje';
-                        $bodyPreview = $message->body
-                            ? mb_substr($message->body, 0, 50)
-                            : '📷 Imagen';
-
-                        app(\App\Services\FcmService::class)->sendToTokens(
-                            $tokens,
-                            [
-                                'title' => $title,
-                                'body'  => $bodyPreview,
-                            ],
-                            [
-                                'conversation_id' => (string) $conv->id,
-                                'sender_id'       => (string) $profile->id,
-                                'type'            => 'chat_message',
-                            ]
-                        );
-                    }
-                    // ----------------------------------------------------------------
-
+                
                     return response()->json([
                         'id'           => $message->id,
                         'body'         => $message->body,
