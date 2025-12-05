@@ -64,4 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::get('/dashboard', [DashboardController::class, 'index']);
+
+    Route::post('/push/web-subscription', [\App\Http\Controllers\WebPushController::class, 'store']);
+
 });

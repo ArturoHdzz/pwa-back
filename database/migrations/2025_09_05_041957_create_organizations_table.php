@@ -14,7 +14,9 @@ return new class extends Migration
         Schema::create('organizations', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name');
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+
         });
     }
 

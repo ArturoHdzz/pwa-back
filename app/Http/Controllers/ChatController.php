@@ -236,6 +236,33 @@ class ChatController extends Controller
                         'created_at'      => now(),
                     ]);
 
+
+
+                    $recipientProfiles = $conv->members
+    ->where('id', '!=', $profile->id);
+
+$profileIds = $recipientProfiles->pluck('id')->all();
+
+// Payload para la notificación
+$title = 'Nuevo mensaje';
+$bodyPreview = $message->body
+    ? mb_substr($message->body, 0, 50)
+    : '📷 Imagen';
+
+$payload = [
+    'title' => $title,
+    'body'  => $bodyPreview,
+    'conversation_id' => (string) $conv->id,
+    'sender_id'       => (string) $profile->id,
+    'type'            => 'chat_message',
+];
+
+// Enviar Web Push con VAPID
+app(\App\Services\WebPushService::class)
+    ->sendToProfiles($profileIds, $payload);
+
+
+    
                 
                     return response()->json([
                         'id'           => $message->id,

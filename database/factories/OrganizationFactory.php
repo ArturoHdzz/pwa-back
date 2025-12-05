@@ -18,7 +18,7 @@ class OrganizationFactory extends Factory
     {
         return [
             'name' => $this->faker->company,
-            'code' => strtoupper($this->faker->unique()->lexify('?????')),
+            'code' => strtoupper($this->faker->unique()->lexify('??????')),
             
         ];
     }

@@ -23,7 +23,7 @@ class ProfileFactory extends Factory
             'user_id' => User::factory(),
             'organization_id' => Organization::factory(),
             'display_name' => $this->faker->name,
-            'role' => $this->faker->randomElement(['jefe','profesor','user','Alumno']),
+            'role' => $this->faker->randomElement(['jefe','profesor','User','Alumno']),
         ];
     }
 }

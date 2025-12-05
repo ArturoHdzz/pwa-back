@@ -17,7 +17,9 @@ return new class extends Migration
             $table->foreignUuid('organization_id')->constrained('organizations')->cascadeOnDelete();
             $table->string('display_name')->nullable();
             $table->enum('role', ['jefe', 'profesor','Alumno','User'])->default('profesor');
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+$table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+
         });
     }
 
