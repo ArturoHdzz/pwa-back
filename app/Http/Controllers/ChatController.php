@@ -204,85 +204,86 @@ class ChatController extends Controller
                 return response()->json($conv);
             }
 
-                    public function sendMessage(Request $request, $conversationId)
-                    {
-                        $user = $request->user();
-                        $profile = $user->profile;
+                   public function sendMessage(Request $request, $conversationId)
+                {
+                    $user = $request->user();
+                    $profile = $user->profile;
 
-                        $conv = ChatConversation::with('members')->findOrFail($conversationId);
+                    $conv = ChatConversation::with('members')->findOrFail($conversationId);
 
-                        // $isMember = $conv->members->contains('id', $profile->id);
+                    $data = $request->validate([
+                        'body'  => ['nullable', 'string'],
+                        'image' => ['nullable', 'image', 'max:10240'], // 10MB
+                    ]);
 
-                        // if (! $isMember) {
-                        //     return response()->json(['error' => 'No perteneces a esta conversación'], 403);
-                        // }
-
-                        $data = $request->validate([
-        'body'  => ['nullable', 'string'],
-        'image' => ['nullable', 'image', 'max:10240'], // 10MB
-    ]);
-
-    if (empty($data['body']) && ! $request->hasFile('image')) {
-        return response()->json([
-            'message' => 'Debes enviar texto o una imagen.',
-        ], 422);
-    }
-
-    $imagePath = null;
-
-    if ($request->hasFile('image')) {
-        $imagePath = $request->file('image')->store(
-            "chat/{$conv->id}/{$profile->id}",
-            'public'
-        );
-    }
-
-    $message = ChatMessage::create([
-        'conversation_id' => $conv->id,
-        'organization_id' => $profile->organization_id,
-        'sender_id'       => $profile->id,
-        'body'            => $data['body'] ?? null,
-        'attachment_path' => $imagePath,
-        'created_at'      => now(),
-    ]);
-
-
-
-    $recipientProfiles = $conv->members
-        ->where('id', '!=', $profile->id); 
-    $tokens = MobilePushToken::whereIn('profile_id', $recipientProfiles->pluck('id'))
-        ->pluck('token')
-        ->all();
-
-    if (!empty($tokens)) {
-        $title = 'Nuevo mensaje';
-        $bodyPreview = $message->body
-            ? mb_substr($message->body, 0, 50)
-            : '📷 Imagen';
-
-        $this->fcm->sendToTokens(
-            $tokens,
-            [
-                'title' => $title,
-                'body'  => $bodyPreview,
-            ],
-            [
-                'conversation_id' => (string) $conv->id,
-                'sender_id'       => (string) $profile->id,
-                'type'            => 'chat_message',
-            ]
-        );
-    }
-
-    return response()->json([
-        'id'           => $message->id,
-        'body'         => $message->body,
-        'image_url'    => $message->attachment_url,
-        'created_at'   => $message->created_at,
-        'sender_id'    => $message->sender_id,
-        'is_me'        => true,
-    ], 201);
+                    if (empty($data['body']) && ! $request->hasFile('image')) {
+                        return response()->json([
+                            'message' => 'Debes enviar texto o una imagen.',
+                        ], 422);
                     }
+
+                    $imagePath = null;
+
+                    if ($request->hasFile('image')) {
+                        $imagePath = $request->file('image')->store(
+                            "chat/{$conv->id}/{$profile->id}",
+                            'public'
+                        );
+                    }
+
+                    $message = ChatMessage::create([
+                        'conversation_id' => $conv->id,
+                        'organization_id' => $profile->organization_id,
+                        'sender_id'       => $profile->id,
+                        'body'            => $data['body'] ?? null,
+                        'attachment_path' => $imagePath,
+                        'created_at'      => now(),
+                    ]);
+
+                    // --------- FCM: enviar noti a todos los demás miembros ----------
+                    $recipientProfiles = $conv->members
+                        ->where('id', '!=', $profile->id);
+
+                    $tokens = \App\Models\MobilePushToken::whereIn(
+                            'profile_id',
+                            $recipientProfiles->pluck('id')
+                        )
+                        ->pluck('token')
+                        ->unique()
+                        ->values()
+                        ->all();
+
+                    if (! empty($tokens)) {
+                        $title = 'Nuevo mensaje';
+                        $bodyPreview = $message->body
+                            ? mb_substr($message->body, 0, 50)
+                            : '📷 Imagen';
+
+                        app(\App\Services\FcmService::class)->sendToTokens(
+                            $tokens,
+                            [
+                                'title' => $title,
+                                'body'  => $bodyPreview,
+                            ],
+                            [
+                                'conversation_id' => (string) $conv->id,
+                                'sender_id'       => (string) $profile->id,
+                                'type'            => 'chat_message',
+                            ]
+                        );
+                    }
+                    // ----------------------------------------------------------------
+
+                    return response()->json([
+                        'id'           => $message->id,
+                        'body'         => $message->body,
+                        'image_url'    => $message->attachment_url,
+                        'created_at'   => $message->created_at,
+                        'sender_id'    => $message->sender_id,
+                        'is_me'        => true,
+                    ], 201);
+                }
+
 
 
     public function messages(Request $request, string $conversationId)

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\MobilePushToken;
 use Illuminate\Http\Request;
 
 class MobilePushTokenController extends Controller

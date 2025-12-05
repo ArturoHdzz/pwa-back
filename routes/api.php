@@ -11,6 +11,8 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\GroupMemberController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TaskAssigneeController;
+use App\Http\Controllers\MobilePushTokenController;
+use App\Http\Controllers\PushSubscriptionController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
