@@ -7,6 +7,7 @@ use App\Models\ChatMessage;
 use App\Models\ChatConversation;
 use App\services\WebPushService;
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Enums\ConversationType;
@@ -316,7 +317,7 @@ app(WebPushService::class)->sendToProfiles($profileIds, $payload);
         'attachment_url'  => $m->attachment_url,
     ]);
 
-    
+
             return [
                 'id'         => $m->id,
                 'body'       => $m->body,
