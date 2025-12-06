@@ -5,7 +5,7 @@ use App\Models\Profile;
 
 use App\Models\ChatMessage;
 use App\Models\ChatConversation;
-use App\Services\WebPushService;
+use App\services\WebPushService;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -251,17 +251,15 @@ $bodyPreview = $message->body
     : '📷 Imagen';
 
 $payload = [
-    'title' => $title,
-    'body'  => $bodyPreview,
+    'title'           => $title,
+    'body'            => $bodyPreview,
     'conversation_id' => (string) $conv->id,
     'sender_id'       => (string) $profile->id,
     'type'            => 'chat_message',
 ];
 
 // Enviar Web Push con VAPID
-app(\App\Services\WebPushService::class)
-    ->sendToProfiles($profileIds, $payload);
-
+app(WebPushService::class)->sendToProfiles($profileIds, $payload);
 
     
                 
