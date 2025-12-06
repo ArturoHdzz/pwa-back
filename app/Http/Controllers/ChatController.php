@@ -309,6 +309,14 @@ app(WebPushService::class)->sendToProfiles($profileIds, $payload);
 
         // Mapear a un formato cómodo para el front
         $mapped = $messages->getCollection()->map(function (ChatMessage $m) use ($profile) {
+
+            \Log::info('Mapeando ChatMessage', [
+        'id'              => $m->id,
+        'attachment_path' => $m->attachment_path,
+        'attachment_url'  => $m->attachment_url,
+    ]);
+
+    
             return [
                 'id'         => $m->id,
                 'body'       => $m->body,

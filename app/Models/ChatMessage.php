@@ -47,9 +47,25 @@ class ChatMessage extends Model
     public function getAttachmentUrlAttribute(): ?string
     {
         if (! $this->attachment_path) {
+            Log::info('ChatMessage attachment_url: attachment_path vacío', [
+                'id' => $this->id,
+            ]);
             return null;
         }
 
-        return asset('storage/' . $this->attachment_path);
+        // Usa el disco public para construir la URL
+        $url = Storage::disk('public')->url($this->attachment_path);
+
+        // Forzar https por si APP_URL quedó en http en algún momento
+        $url = preg_replace('#^http://#', 'https://', $url);
+
+        Log::info('ChatMessage attachment_url generado', [
+            'id'   => $this->id,
+            'path' => $this->attachment_path,
+            'url'  => $url,
+        ]);
+
+        return $url;
+        
     }
 }
