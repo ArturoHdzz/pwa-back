@@ -5,6 +5,7 @@ use App\Models\WebPushSubscription;
 use Minishlink\WebPush\Subscription;
 use Minishlink\WebPush\WebPush;
 use Illuminate\Support\Facades\Log;
+
 class WebPushService
 {
     protected WebPush $webPush;
