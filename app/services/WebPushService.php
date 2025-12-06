@@ -20,7 +20,21 @@ class WebPushService
             ],
         ];
 
+        set_error_handler(function ($errno, $errstr) {
+            if (
+                $errno === E_USER_WARNING &&
+                str_contains($errstr, 'It is highly recommended to install the GMP or BCMath extension')
+            ) {
+                Log::warning('WebPush: GMP/BCMath no instalados, usando implementación lenta');
+                return true; // se traga el warning
+            }
+
+            return false; // otros errores que sigan su curso normal
+        });
+
         $this->webPush = new WebPush($auth);
+
+        restore_error_handler();
     }
 
     public function sendToProfiles(array $profileIds, array $payload): void
