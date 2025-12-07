@@ -321,7 +321,7 @@ app(WebPushService::class)->sendToProfiles($profileIds, $payload);
             return [
                 'id'         => $m->id,
                 'body'       => $m->body,
-                'image_url'  => $m->attachment_path, 
+                'image_url'  => $m->attachment_url, 
                 'created_at' => $m->created_at,
                 'is_me'      => $m->sender_id === $profile->id,
                 'sender_id'  => $m->sender_id,
