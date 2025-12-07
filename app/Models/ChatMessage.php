@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
@@ -66,6 +66,6 @@ class ChatMessage extends Model
         ]);
 
         return $url;
-        
+
     }
 }
