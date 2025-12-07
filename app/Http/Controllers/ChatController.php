@@ -294,10 +294,9 @@ class ChatController extends Controller
     // }
 
         $messages = ChatMessage::where('conversation_id', $conv->id)
-    ->orderBy('created_at', 'desc')   // 👈 más nuevos primero
+    ->orderBy('created_at', 'desc') 
     ->paginate($perPage);
 
-        // Mapear a un formato cómodo para el front
         $mapped = $messages->getCollection()->map(function (ChatMessage $m) use ($profile) {
             return [
                 'id'         => $m->id,
@@ -309,7 +308,6 @@ class ChatController extends Controller
             ];
         });
 
-        // devolver con metadatos de paginación
         return response()->json([
             'data' => $mapped,
             'meta' => [
