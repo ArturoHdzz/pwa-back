@@ -293,10 +293,9 @@ class ChatController extends Controller
     //     return response()->json(['error' => 'No perteneces a esta conversación'], 403);
     // }
 
-        $messages = ChatMessage::query()
-            ->where('conversation_id', $conv->id)
-            ->orderBy('created_at', 'asc')
-            ->paginate($perPage);
+        $messages = ChatMessage::where('conversation_id', $conv->id)
+    ->orderBy('created_at', 'desc')   // 👈 más nuevos primero
+    ->paginate($perPage);
 
         // Mapear a un formato cómodo para el front
         $mapped = $messages->getCollection()->map(function (ChatMessage $m) use ($profile) {
