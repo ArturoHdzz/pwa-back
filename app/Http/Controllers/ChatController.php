@@ -207,8 +207,21 @@ class ChatController extends Controller
                     $user = $request->user();
                     $profile = $user->profile;
 
-                    $conv = ChatConversation::with('members')->findOrFail($conversationId);
+                    \Log::info('REQUEST FILES', [
+    'hasFile(image)' => $request->hasFile('image'),
+]);
 
+if ($request->hasFile('image')) {
+    \Log::info('Imagen recibida', [
+        'mime' => $request->file('image')->getMimeType(),
+        'size_kb' => round($request->file('image')->getSize() / 1024, 2),
+        'original_name' => $request->file('image')->getClientOriginalName(),
+    ]);
+} else {
+    \Log::info('NO llegó imagen al backend');
+}
+
+                    $conv = ChatConversation::with('members')->findOrFail($conversationId);
                     $data = $request->validate([
                         'body'  => ['nullable', 'string'],
                         'image' => ['nullable', 'image', 'max:51200'], 
@@ -237,30 +250,27 @@ class ChatController extends Controller
                         'attachment_path' => $imagePath,
                         'created_at'      => now(),
                     ]);
+                                    $recipientProfiles = $conv->members
+                    ->where('id', '!=', $profile->id);
 
+                $profileIds = $recipientProfiles->pluck('id')->all();
 
+                // Payload para la notificación
+                $title = 'Nuevo mensaje';
+                $bodyPreview = $message->body
+                    ? mb_substr($message->body, 0, 50)
+                    : '📷 Imagen';
 
-                    $recipientProfiles = $conv->members
-    ->where('id', '!=', $profile->id);
+                $payload = [
+                    'title'           => $title,
+                    'body'            => $bodyPreview,
+                    'conversation_id' => (string) $conv->id,
+                    'sender_id'       => (string) $profile->id,
+                    'type'            => 'chat_message',
+                ];
 
-$profileIds = $recipientProfiles->pluck('id')->all();
-
-// Payload para la notificación
-$title = 'Nuevo mensaje';
-$bodyPreview = $message->body
-    ? mb_substr($message->body, 0, 50)
-    : '📷 Imagen';
-
-$payload = [
-    'title'           => $title,
-    'body'            => $bodyPreview,
-    'conversation_id' => (string) $conv->id,
-    'sender_id'       => (string) $profile->id,
-    'type'            => 'chat_message',
-];
-
-// Enviar Web Push con VAPID
-app(WebPushService::class)->sendToProfiles($profileIds, $payload);
+                // Enviar Web Push con VAPID
+                app(WebPushService::class)->sendToProfiles($profileIds, $payload);
 
     
                 
