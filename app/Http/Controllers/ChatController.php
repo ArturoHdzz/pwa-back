@@ -207,50 +207,30 @@ class ChatController extends Controller
                     $user = $request->user();
                     $profile = $user->profile;
 
-                    \Log::info('REQUEST FILES', [
-    'hasFile(image)' => $request->hasFile('image'),
-]);
-
-if ($request->hasFile('image')) {
-    \Log::info('Imagen recibida', [
-        'mime' => $request->file('image')->getMimeType(),
-        'size_kb' => round($request->file('image')->getSize() / 1024, 2),
-        'original_name' => $request->file('image')->getClientOriginalName(),
-    ]);
-} else {
-    \Log::info('NO llegó imagen al backend');
-}
-
                     $conv = ChatConversation::with('members')->findOrFail($conversationId);
                     $data = $request->validate([
-                        'body'  => ['nullable', 'string'],
-                        'image' => ['nullable', 'image', 'max:51200'], 
+                    'body'      => ['nullable', 'string'],
+                    'image_url' => ['nullable', 'url'],
+                    // si luego quieres soportar archivo también:
+                    // 'image'     => ['nullable', 'image', 'max:51200'],
                     ]);
-
-                    if (empty($data['body']) && ! $request->hasFile('image')) {
-                        return response()->json([
-                            'message' => 'Debes enviar texto o una imagen.',
-                        ], 422);
+                    if (empty($data['body']) && empty($data['image_url'])) {
+                    return response()->json([
+                        'message' => 'Debes enviar texto o una imagen.',
+                    ], 422);
                     }
-
-                    $imagePath = null;
-
-                    if ($request->hasFile('image')) {
-                        $imagePath = $request->file('image')->store(
-                            "chat/{$conv->id}/{$profile->id}",
-                            'public'
-                        );
-                    }
+                    $imagePath = $data['image_url'] ?? null;
 
                     $message = ChatMessage::create([
-                        'conversation_id' => $conv->id,
-                        'organization_id' => $profile->organization_id,
-                        'sender_id'       => $profile->id,
-                        'body'            => $data['body'] ?? null,
-                        'attachment_path' => $imagePath,
-                        'created_at'      => now(),
+                    'conversation_id' => $conv->id,
+                    'organization_id' => $profile->organization_id,
+                    'sender_id'       => $profile->id,
+                    'body'            => $data['body'] ?? null,
+                    'attachment_path' => $imagePath, 
+                    'created_at'      => now(),
                     ]);
-                                    $recipientProfiles = $conv->members
+
+                $recipientProfiles = $conv->members
                     ->where('id', '!=', $profile->id);
 
                 $profileIds = $recipientProfiles->pluck('id')->all();
