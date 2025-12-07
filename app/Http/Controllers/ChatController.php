@@ -211,7 +211,7 @@ class ChatController extends Controller
 
                     $data = $request->validate([
                         'body'  => ['nullable', 'string'],
-                        'image' => ['nullable', 'image', 'max:10240'], // 10MB
+                        'image' => ['nullable', 'image', 'max:51200'], 
                     ]);
 
                     if (empty($data['body']) && ! $request->hasFile('image')) {
@@ -310,14 +310,6 @@ app(WebPushService::class)->sendToProfiles($profileIds, $payload);
 
         // Mapear a un formato cómodo para el front
         $mapped = $messages->getCollection()->map(function (ChatMessage $m) use ($profile) {
-
-            \Log::info('Mapeando ChatMessage', [
-        'id'              => $m->id,
-        'attachment_path' => $m->attachment_path,
-        'attachment_url'  => $m->attachment_url,
-    ]);
-
-
             return [
                 'id'         => $m->id,
                 'body'       => $m->body,
