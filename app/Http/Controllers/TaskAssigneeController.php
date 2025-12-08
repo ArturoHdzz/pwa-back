@@ -9,6 +9,7 @@ use App\Models\TaskAssignee;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use App\Services\SupabaseStorageService;
 
 class TaskAssigneeController extends Controller
 {
