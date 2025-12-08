@@ -36,9 +36,9 @@ class SupabaseStorageService
                 'Authorization'=> 'Bearer ' . $this->key,
             ])
             ->attach('file', file_get_contents($file->getRealPath()), $filename)
-            ->post($this->url . "/storage/v1/object/{$this->bucket}", [
-                'objectName' => $objectPath,
-            ]);
+            ->post($this->url . "/storage/v1/object/{$this->bucket}/upload", [
+            'objectName' => $objectPath
+        ]);
 
         if (! $response->successful()) {
             // Puedes hacer throw, o solo log y seguir con local
