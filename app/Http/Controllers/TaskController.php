@@ -145,6 +145,7 @@ class TaskController extends Controller
             } elseif ($groupId) {
                 $memberIds = DB::table('group_members')
                     ->where('group_id', $groupId)
+                    ->where('user_id', '!=', $user->profile->id)
                     ->pluck('user_id');
 
                 foreach ($memberIds as $memberId) {
