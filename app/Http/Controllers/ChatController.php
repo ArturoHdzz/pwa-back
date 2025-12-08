@@ -230,8 +230,15 @@ class ChatController extends Controller
                     'created_at'      => now(),
                     ]);
 
-                $recipientProfiles = $conv->members
-                    ->where('id', '!=', $profile->id);
+                 if ($conv->type === ConversationType::GROUP && $conv->group) {
+                    // miembros del grupo (group_members)
+                    $recipientProfiles = $conv->group->members
+                        ->where('id', '!=', $profile->id);
+                } else {
+                    // conversación normal, usas chat_members
+                    $recipientProfiles = $conv->members
+                        ->where('id', '!=', $profile->id);
+                }
 
                 $profileIds = $recipientProfiles->pluck('id')->all();
 
