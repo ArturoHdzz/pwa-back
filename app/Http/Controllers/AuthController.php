@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Mail\TwoFactorCode; 
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -109,10 +112,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Errores de validación',
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json(['message' => 'Errores', 'errors' => $validator->errors()], 422);
         }
 
         if (!Auth::attempt($request->only('email', 'password'))) {
@@ -120,16 +120,52 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
-        
+
+        if (!$user->activo) {
+            return response()->json(['message' => 'Cuenta desactivada.'], 403);
+        }
+
+        $code = rand(100000, 999999);
+        $user->two_factor_code = $code;
+        $user->two_factor_expires_at = now()->addMinutes(10);
+        $user->save();
+
+        try {
+            Mail::to($user->email)->send(new TwoFactorCode($code));
+        } catch (\Exception $e) {
+             Log::error("Error enviando correo: " . $e->getMessage());
+        }
+
+        return response()->json([
+            'message' => 'Código enviado a tu correo',
+            'require_2fa' => true,
+            'user_id' => $user->id
+        ]);
+    }
+
+    public function verify2fa(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|integer',
+            'code' => 'required|integer'
+        ]);
+
+        $user = User::find($request->user_id);
+
+        if (!$user || $user->two_factor_code != $request->code) {
+            return response()->json(['message' => 'Código inválido'], 401);
+        }
+
+        if ($user->two_factor_expires_at < now()) {
+            return response()->json(['message' => 'El código ha expirado'], 401);
+        }
+
+        $user->two_factor_code = null;
+        $user->two_factor_expires_at = null;
         $user->ultimo_login = now();
         $user->save();
 
-        if (!$user->activo) {
-            return response()->json(['message' => 'Esta cuenta está desactivada.'], 403);
-        }
-
         $token = $user->createToken('auth_token')->accessToken;
-
         $user->load('profile.organization');
 
         return response()->json([

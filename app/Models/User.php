@@ -19,6 +19,8 @@ class User extends Authenticatable
         'apellido_materno',
         'telefono',
         'activo',
+        'two_factor_code',   
+        'two_factor_expires_at', 
     ];
 
   public function profile()
@@ -91,6 +93,7 @@ public function profiles()
             'password' => 'hashed',
             'activo' => 'boolean',
             'ultimo_login' => 'datetime',
+            'two_factor_expires_at' => 'datetime',
         ];
     }
 }
