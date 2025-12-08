@@ -82,7 +82,8 @@ class AuthController extends Controller
 
             DB::commit();
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $token = $user->createToken('auth_token')->accessToken;
+            
             $user->load('profile.organization');
 
             return response()->json([
@@ -127,7 +128,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Esta cuenta está desactivada.'], 403);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token')->accessToken;
 
         $user->load('profile.organization');
 
@@ -140,7 +141,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $request->user()->token()->revoke();
 
         return response()->json([
             'message' => 'Sesión cerrada exitosamente'
