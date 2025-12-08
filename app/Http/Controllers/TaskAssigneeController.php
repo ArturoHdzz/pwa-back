@@ -20,23 +20,23 @@ class TaskAssigneeController extends Controller
      * Entregar la tarea (texto y/o archivo).
      * POST /api/tasks/{task}/submit
      */
-   public function submit(Request $request, Task $task)
-{
-    $user = $request->user(); // Sanctum
-    $profile = $user->profile;
+    public function submit(Request $request, Task $task)
+    {
+        $user = $request->user(); // Sanctum
+        $profile = $user->profile;
 
-    if (!$profile) {
-        return response()->json([
-            'message' => 'No se encontró el perfil del usuario autenticado.',
-        ], 403);
-    }
+        if (! $profile) {
+            return response()->json([
+                'message' => 'No se encontró el perfil del usuario autenticado.',
+            ], 403);
+        }
 
-    // Verificar que esta tarea está asignada a este perfil
-    $taskAssignee = TaskAssignee::where('task_id', $task->id)
-        ->where('user_id', $profile->id) // OJO: user_id apunta a profiles.id
-        ->firstOrFail();
+        // Verificar que esta tarea está asignada a este perfil
+        $taskAssignee = TaskAssignee::where('task_id', $task->id)
+            ->where('user_id', $profile->id) // user_id apunta a profiles.id
+            ->firstOrFail();
 
-    $data = $request->validate([
+        $data = $request->validate([
             'submission_text' => ['nullable', 'string'],
             'file'            => ['nullable', 'file', 'max:10240'], // 10 MB
         ]);
@@ -56,13 +56,13 @@ class TaskAssigneeController extends Controller
         if ($request->hasFile('file')) {
             $file = $request->file('file');
 
-            // 1) Guardar en storage/app/public 
+            // (Opcional) si quieres también guardarlo en storage local:
             // $localFilePath = $file->store(
             //     "tasks/{$task->id}/submissions/{$profile->id}",
             //     'public'
             // );
 
-            // 2) Subir también a Supabase
+            // Subir a Supabase
             try {
                 $supabaseFileUrl = $this->supabase->upload(
                     $file,
@@ -76,9 +76,9 @@ class TaskAssigneeController extends Controller
         }
 
         $payload = [
-            'text'           => $data['submission_text'] ?? null,
-            'local_path'     => $localFilePath,
-            'supabase_url'   => $supabaseFileUrl,
+            'text'         => $data['submission_text'] ?? null,
+            'local_path'   => $localFilePath,
+            'supabase_url' => $supabaseFileUrl,
         ];
 
         TaskAssignee::where('task_id', $task->id)
@@ -98,7 +98,6 @@ class TaskAssigneeController extends Controller
             'task_assignee' => $taskAssignee,
         ]);
     }
-
     /**
      * Cambiar el estado de la tarea del lado del alumno.
      * PATCH /api/tasks/{task}/status
