@@ -9,10 +9,13 @@ use App\Models\TaskAssignee;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
-use App\Services\SupabaseStorageService;
+use App\services\SupabaseStorageService;
 
 class TaskAssigneeController extends Controller
 {
+      public function __construct(
+        protected SupabaseStorageService $supabase
+    ) {}
     /**
      * Entregar la tarea (texto y/o archivo).
      * POST /api/tasks/{task}/submit
@@ -61,7 +64,7 @@ class TaskAssigneeController extends Controller
 
             // 2) Subir también a Supabase
             try {
-                $supabaseFileUrl = $supabase->upload(
+                $supabaseFileUrl = $this->supabase->upload(
                     $file,
                     "tasks/{$task->id}/submissions/{$profile->id}"
                 );
@@ -69,8 +72,6 @@ class TaskAssigneeController extends Controller
                 \Log::error('Error al subir archivo de tarea a Supabase', [
                     'error' => $e->getMessage(),
                 ]);
-                // Si quieres, puedes seguir sin romper la entrega:
-                // o lanzar un 500 si quieres ser estricto
             }
         }
 
