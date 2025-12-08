@@ -35,6 +35,11 @@ class ChatMessage extends Model
         return $this->belongsTo(ChatConversation::class, 'conversation_id');
     }
 
+    public function senderProfile()
+    {
+        return $this->belongsTo(Profile::class, 'sender_id');
+    }
+
     public function organization()
     {
         return $this->belongsTo(Organization::class);

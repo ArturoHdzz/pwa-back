@@ -305,6 +305,7 @@ class ChatController extends Controller
                 'created_at' => $m->created_at,
                 'is_me'      => $m->sender_id === $profile->id,
                 'sender_id'  => $m->sender_id,
+                'sender_name'  => optional($m->senderProfile)->display_name,
             ];
         });
 
