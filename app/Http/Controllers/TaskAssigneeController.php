@@ -33,53 +33,69 @@ class TaskAssigneeController extends Controller
         ->firstOrFail();
 
     $data = $request->validate([
-        'submission_text' => ['nullable', 'string'],
-        'file'            => ['nullable', 'file', 'max:10240'], // 10 MB
-    ]);
-
-    if (
-        empty($data['submission_text']) &&
-        !$request->hasFile('file')
-    ) {
-        return response()->json([
-            'message' => 'Debes enviar texto o un archivo para poder entregar la tarea.',
-        ], 422);
-    }
-
-    $filePath = null;
-
-    if ($request->hasFile('file')) {
-        $filePath = $request->file('file')->store(
-            "tasks/{$task->id}/submissions/{$profile->id}",
-            'public'
-        );
-    }
-
-    $payload = [
-        'text' => $data['submission_text'] ?? null,
-        'file' => $filePath,
-    ];
-
-    // 🔧 AQUÍ el cambio importante: usamos update() en lugar de save()
-    TaskAssignee::where('task_id', $task->id)
-        ->where('user_id', $profile->id)
-        ->update([
-            'submission_content' => json_encode($payload),
-            'status'             => TaskStatus::SUBMITTED->value,
-            'submitted_at'       => now(),
+            'submission_text' => ['nullable', 'string'],
+            'file'            => ['nullable', 'file', 'max:10240'], // 10 MB
         ]);
 
-    // Volvemos a cargar para regresar los datos actualizados
-    $taskAssignee = TaskAssignee::where('task_id', $task->id)
-        ->where('user_id', $profile->id)
-        ->first();
+        if (
+            empty($data['submission_text']) &&
+            ! $request->hasFile('file')
+        ) {
+            return response()->json([
+                'message' => 'Debes enviar texto o un archivo para poder entregar la tarea.',
+            ], 422);
+        }
 
-    return response()->json([
-        'message'       => 'Tarea entregada correctamente.',
-        'task_assignee' => $taskAssignee,
-    ]);
-}
+        $localFilePath   = null;
+        $supabaseFileUrl = null;
 
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+
+            // 1) Guardar en storage/app/public 
+            // $localFilePath = $file->store(
+            //     "tasks/{$task->id}/submissions/{$profile->id}",
+            //     'public'
+            // );
+
+            // 2) Subir también a Supabase
+            try {
+                $supabaseFileUrl = $supabase->upload(
+                    $file,
+                    "tasks/{$task->id}/submissions/{$profile->id}"
+                );
+            } catch (\Throwable $e) {
+                \Log::error('Error al subir archivo de tarea a Supabase', [
+                    'error' => $e->getMessage(),
+                ]);
+                // Si quieres, puedes seguir sin romper la entrega:
+                // o lanzar un 500 si quieres ser estricto
+            }
+        }
+
+        $payload = [
+            'text'           => $data['submission_text'] ?? null,
+            'local_path'     => $localFilePath,
+            'supabase_url'   => $supabaseFileUrl,
+        ];
+
+        TaskAssignee::where('task_id', $task->id)
+            ->where('user_id', $profile->id)
+            ->update([
+                'submission_content' => json_encode($payload),
+                'status'             => TaskStatus::SUBMITTED->value,
+                'submitted_at'       => now(),
+            ]);
+
+        $taskAssignee = TaskAssignee::where('task_id', $task->id)
+            ->where('user_id', $profile->id)
+            ->first();
+
+        return response()->json([
+            'message'       => 'Tarea entregada correctamente.',
+            'task_assignee' => $taskAssignee,
+        ]);
+    }
 
     /**
      * Cambiar el estado de la tarea del lado del alumno.
