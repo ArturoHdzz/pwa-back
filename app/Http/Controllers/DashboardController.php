@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Group;
 use App\Models\Task;
+use App\Models\Profile; 
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -27,20 +28,17 @@ class DashboardController extends Controller
         $organization = $user->profile->organization;
 
         $stats = [
-            'students' => DB::table('profiles')
-                ->where('organization_id', $orgId)
-                ->where('role', '!=', 'jefe') 
-                ->count(),
-            'groups' => Group::where('organization_id', $orgId)->count(),
+            'students' => Profile::where('organization_id', $organization->id)->where('role', 'student')->count(),
+            'groups' => Group::where('organization_id', $organization->id)->count(),
             'needs_grading' => DB::table('task_assignees')
                 ->join('tasks', 'task_assignees.task_id', '=', 'tasks.id')
-                ->where('tasks.organization_id', $orgId)
+                ->where('tasks.organization_id', $organization->id)
                 ->where('task_assignees.status', 'submitted')
                 ->count(),
             'pending_submission' => DB::table('task_assignees')
                 ->join('tasks', 'task_assignees.task_id', '=', 'tasks.id')
-                ->where('tasks.organization_id', $orgId)
-                ->where('task_assignees.status', 'pending')
+                ->where('tasks.organization_id', $organization->id)
+                ->whereIn('task_assignees.status', ['pending', 'in_progress']) 
                 ->count(),
         ];
 
