@@ -16,6 +16,7 @@ use App\Http\Controllers\TaskAssigneeController;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login/verify', [AuthController::class, 'verify2fa']);
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register/verify', [AuthController::class, 'verifyEmail']);
 
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

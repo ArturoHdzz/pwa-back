@@ -19,8 +19,9 @@ class User extends Authenticatable
         'apellido_materno',
         'telefono',
         'activo',
-        'two_factor_code',   
-        'two_factor_expires_at', 
+        'two_factor_code',
+        'two_factor_expires_at',
+        'verification_code',
     ];
 
   public function profile()
