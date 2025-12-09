@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Mail\TwoFactorCode; 
+use App\Mail\EmailVerification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -114,25 +115,57 @@ class AuthController extends Controller
                 'role' => $role,
             ]);
 
+            $code = rand(100000, 999999);
+            $user->verification_code = $code;
+            $user->save();
+
             DB::commit();
 
-            $token = $user->createToken('auth_token')->accessToken;
-            
-            $user->load('profile.organization');
+            Log::info("📧 CÓDIGO VERIFICACIÓN PARA {$user->email}: {$code}");
+
+            try {
+                Mail::to($user->email)->send(new EmailVerification($code));
+            } catch (\Exception $e) {
+                Log::error("Error correo registro: " . $e->getMessage());
+            }
 
             return response()->json([
-                'message' => $request->filled('organization_code') ? 'Te has unido a la organización exitosamente' : 'Organización creada exitosamente',
-                'user' => $user,
-                'token' => $token
-            ], 201);
+                'message' => 'Registro exitoso. Por favor verifica tu correo.',
+                'require_email_verification' => true,
+                'email' => $user->email
+            ], 200);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'message' => 'Error al registrar usuario',
-                'error' => $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Error', 'error' => $e->getMessage()], 500);
         }
+    }
+
+    public function verifyEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'code' => 'required'
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || $user->verification_code != $request->code) {
+            return response()->json(['message' => 'Código incorrecto'], 400);
+        }
+
+        $user->email_verified_at = now();
+        $user->verification_code = null;
+        $user->save();
+
+        $token = $user->createToken('auth_token')->accessToken;
+        $user->load('profile.organization');
+
+        return response()->json([
+            'message' => 'Correo verificado exitosamente',
+            'user' => $user,
+            'token' => $token
+        ]);
     }
 
     public function login(Request $request)
@@ -156,6 +189,10 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
+
+        if ($user->email_verified_at === null) {
+            return response()->json(['message' => 'Debes verificar tu correo electrónico antes de iniciar sesión.'], 403);
+        }
 
         if (!$user->activo) {
             return response()->json(['message' => 'Cuenta desactivada.'], 403);
