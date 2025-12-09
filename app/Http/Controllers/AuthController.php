@@ -36,6 +36,12 @@ class AuthController extends Controller
             'response' => $token,
             'remoteip' => $request->ip(),
         ]);
+         Log::info('Turnstile secret debug', [
+        'len'    => strlen($secret),
+        'start'  => substr($secret, 0, 10),
+        'end'    => substr($secret, -5),
+    ]);
+    
         Log::info('Turnstile response', [
         'status' => $response->status(),
         'body'   => $response->json(),
