@@ -15,6 +15,7 @@ use App\Mail\TwoFactorCode;
 use App\Mail\EmailVerification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rules\Password;
 
 use Illuminate\Support\Facades\Http;
 
@@ -59,7 +60,16 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            
+            'password' => [
+                'required',
+                'string',
+                Password::min(8)
+                    ->mixedCase()    
+                    ->numbers()      
+                    ->symbols()        
+            ],
+
             'apellido_paterno' => 'required|string|max:255',
             'apellido_materno' => 'required|string|max:255',
             'telefono' => 'required|string|max:20',
