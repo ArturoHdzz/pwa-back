@@ -4,8 +4,6 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 class TwoFactorCode extends Mailable
@@ -23,26 +21,6 @@ class TwoFactorCode extends Mailable
     }
 
     /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Tu Código de Verificación',
-        );
-    }
-
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        return new Content(
-            view: 'view.name',
-        );
-    }
-
-    /**
      * Get the attachments for the message.
      *
      * @return array<int, \Illuminate\Mail\Mailables\Attachment>
@@ -52,6 +30,7 @@ class TwoFactorCode extends Mailable
         return [];
     }
 
+    // Solo usamos build. Borra content() y envelope() para evitar conflictos.
     public function build()
     {
         return $this->subject('Tu Código de Verificación')->html("
