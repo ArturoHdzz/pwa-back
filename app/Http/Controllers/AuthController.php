@@ -14,11 +14,42 @@ use Illuminate\Support\Str;
 use App\Mail\TwoFactorCode; 
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
+
+    private function validateTurnstile(Request $request)
+    {
+        $token = $request->input('turnstile_token');
+
+        if (!$token) {
+            return false;
+        }
+
+        $secret = config('services.turnstile.secret') ?? env('TURNSTILE_SECRET_KEY');
+
+        $response = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+            'secret'   => $secret,
+            'response' => $token,
+            'remoteip' => $request->ip(),
+        ]);
+
+        if (!$response->ok()) {
+            return false;
+        }
+
+        $data = $response->json();
+        return $data['success'] ?? false;
+    }
+
     public function register(Request $request)
     {
+        if (!$this->validateTurnstile($request)) {
+        return response()->json([
+            'message' => 'Verificación de seguridad fallida.',
+        ], 422);
+    }
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
@@ -106,6 +137,11 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        if (!$this->validateTurnstile($request)) {
+        return response()->json([
+            'message' => 'Verificación de seguridad fallida.',
+        ], 422);
+    }
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',

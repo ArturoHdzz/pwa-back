@@ -40,6 +40,10 @@ return [
         'bucket' => env('SUPABASE_BUCKET', 'Taks'),
     ],
    
+'turnstile' => [
+    'secret' => env('TURNSTILE_SECRET_KEY'),
+    'sitekey' => env('TURNSTILE_SITE_KEY'),
+],
 
 
 ];
