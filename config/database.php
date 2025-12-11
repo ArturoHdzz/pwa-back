@@ -75,6 +75,10 @@ return [
         'prefix_indexes' => true,
         'search_path' => 'laravel',
         'sslmode' => 'prefer',
+        'options' => extension_loaded('pdo_pgsql') ? [
+        \PDO::ATTR_EMULATE_PREPARES => true, 
+    ] : [],
+    
         ],
 
         'mariadb' => [
